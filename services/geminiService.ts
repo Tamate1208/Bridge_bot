@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, ThinkingLevel } from "@google/genai";
 import { FileItem, ChatMessage } from "../types";
 
 const MODEL_NAME = 'gemini-3-flash-preview';
@@ -9,7 +9,7 @@ export async function* askGeminiStream(
   files: FileItem[],
   history: ChatMessage[]
 ) {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
   // Prepare file parts for Gemini
   const fileParts = files.map(file => ({
@@ -51,10 +51,10 @@ export async function* askGeminiStream(
       ],
       config: {
         systemInstruction,
-        temperature: 0.4, // 低めの温度設定で正確性を優先
+        temperature: 1, // 思考モデルの場合は1を推奨
         topP: 0.95,
-        // 思考プロセスを有効化して精度を向上
-        thinkingConfig: { thinkingBudget: 2048 }
+        // 思考レベルをHIGHに設定して精度を向上
+        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
       }
     });
 
