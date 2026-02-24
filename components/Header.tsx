@@ -17,10 +17,10 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           <i className="fa-solid fa-bars text-xl"></i>
         </button>
         <div className="flex items-center gap-2">
-          <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
+          <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
             <i className="fa-solid fa-robot text-white text-lg"></i>
           </div>
-          <h1 className="text-xl font-bold text-gray-700 tracking-tight">実践へのBridge講座_Bot</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-gray-700 tracking-tight truncate">実践へのBridge講座_Bot</h1>
         </div>
       </div>
       

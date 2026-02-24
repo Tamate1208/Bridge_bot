@@ -26,8 +26,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, files, onUpload, onRemove, is
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (!isOpen) return null;
-
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -44,7 +42,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, files, onUpload, onRemove, is
   };
 
   return (
-    <aside className="w-80 h-full border-r border-gray-200 bg-gray-50 flex flex-col z-10 animate-fade-in shrink-0">
+    <aside className={`
+      fixed md:relative inset-y-0 left-0 w-80 h-full border-r border-gray-200 bg-gray-50 flex flex-col z-30 md:z-10 
+      transition-transform duration-300 ease-in-out shrink-0
+      ${isOpen ? 'translate-x-0' : '-translate-x-full md:hidden'}
+    `}>
       <div className="p-4 border-b border-gray-200">
         <div className="relative" ref={menuRef}>
           <button 

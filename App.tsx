@@ -136,10 +136,18 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden font-sans">
+    <div className="flex flex-col h-screen overflow-hidden font-sans bg-gray-50">
       <Header onToggleSidebar={toggleSidebar} />
       
       <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile Backdrop */}
+        {state.isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20 md:hidden animate-fade-in"
+            onClick={toggleSidebar}
+          />
+        )}
+
         <Sidebar 
           isOpen={state.isSidebarOpen} 
           files={state.files} 
@@ -148,7 +156,7 @@ const App: React.FC = () => {
           isFileLoading={state.isFileLoading}
         />
         
-        <main className={`flex-1 transition-all duration-300 flex flex-col bg-white ${state.isSidebarOpen ? 'md:ml-0' : 'ml-0'}`}>
+        <main className="flex-1 overflow-hidden flex flex-col bg-white relative">
           <ChatInterface 
             messages={state.messages} 
             onSendMessage={sendMessage} 
