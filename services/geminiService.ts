@@ -67,8 +67,18 @@ export async function* askGeminiStream(
         yield text;
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
-    throw new Error("AIとの通信中にエラーが発生しました。");
+    
+    let errorMessage = "AIとの通信中にエラーが発生しました。";
+    
+    // ページ数制限エラーのハンドリング
+    if (error.message && error.message.includes("exceeds the supported page limit of 1000")) {
+      errorMessage = "資料のページ数が上限（1000ページ）を超えています。資料を分割してアップロードするか、重要な箇所のみを抽出したファイルを使用してください。";
+    } else if (error.message && error.message.includes("429")) {
+      errorMessage = "リクエストが多すぎます。少し時間を置いてから再度お試しください。";
+    }
+    
+    throw new Error(errorMessage);
   }
 }
