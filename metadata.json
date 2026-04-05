@@ -1,0 +1,5 @@
+{
+  "name": "実践へのBridge講座_Bot",
+  "description": "資料を参照して回答を生成する講座専用チャットボット",
+  "requestFramePermissions": []
+}
