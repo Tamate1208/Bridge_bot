@@ -1,5 +1,5 @@
 {
-  "name": "実践へのBridge講座_Bot",
-  "description": "資料を参照して回答を生成する講座専用チャットボット",
+  "name": "AIアシスタント",
+  "description": "専用AIアシスタント。PDF等の資料の要約やコード生成のほか、土木建築技術に対して深い造詣をもちます。",
   "requestFramePermissions": []
 }
