@@ -23,7 +23,6 @@ async function startServer() {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const model = ai.models.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     // Prepare content for Gemini
     const fileParts = files.map((file: any) => ({
