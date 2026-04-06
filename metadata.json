@@ -1,0 +1,5 @@
+{
+  "name": "AIアシスタント",
+  "description": "専用AIアシスタント。PDF等の資料の要約やコード生成のほか、土木建築技術に対して深い造詣をもちます。",
+  "requestFramePermissions": []
+}

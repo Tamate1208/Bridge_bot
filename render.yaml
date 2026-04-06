@@ -1,0 +1,9 @@
+services:
+  - type: static
+    name: ai-assistant-bot
+    env: static
+    buildCommand: npm run build
+    publishPath: ./dist
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # Renderのダッシュボードで手動で値を入力する必要があります
