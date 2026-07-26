@@ -3,6 +3,7 @@ import React, { useState, KeyboardEvent, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from '../types';
+import { speechService, SpeechState } from '../services/speechService';
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
@@ -20,6 +21,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   chatEndRef 
 }) => {
   const [input, setInput] = useState('');
+  const [speechState, setSpeechState] = useState<SpeechState>({
+    isPlaying: false,
+    isPaused: false,
+    currentId: null,
+    currentTitle: null,
+    rate: 1.0,
+    pitch: 1.0,
+    voice: null,
+  });
+
+  useEffect(() => {
+    const unsubscribe = speechService.subscribe((state) => {
+      setSpeechState(state);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleSend = () => {
     if (input.trim() && !isProcessing) {
@@ -86,7 +103,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   }`}>
                     <i className={`fa-solid ${msg.role === 'user' ? 'fa-user' : 'fa-robot'}`}></i>
                   </div>
-                  <div className={`p-3 sm:p-4 rounded-2xl shadow-sm leading-relaxed transition-all ${
+                  <div className={`p-3 sm:p-4 rounded-2xl shadow-sm leading-relaxed transition-all relative group ${
                     msg.role === 'user' 
                       ? 'bg-blue-600 text-white rounded-tr-none text-sm' 
                       : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none overflow-x-auto overflow-y-hidden'
@@ -100,8 +117,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         </ReactMarkdown>
                       </div>
                     )}
-                    <div className={`text-[9px] sm:text-[10px] mt-2 opacity-60 text-right ${msg.role === 'user' ? 'text-white' : 'text-gray-400'}`}>
-                      {msg.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                    <div className={`flex items-center justify-between gap-2 mt-2 pt-1 border-t text-[9px] sm:text-[10px] ${
+                      msg.role === 'user' ? 'border-white/10 text-white/70' : 'border-gray-100 text-gray-400'
+                    }`}>
+                      {/* 音声読み上げボタン */}
+                      <button
+                        onClick={() => {
+                          const title = msg.role === 'user' ? 'ご質問内容' : 'AI回答・要約';
+                          speechService.speak(msg.id, title, msg.content);
+                        }}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-md transition-all ${
+                          speechState.currentId === msg.id
+                            ? msg.role === 'user' 
+                              ? 'bg-white/20 text-white font-bold' 
+                              : 'bg-blue-50 text-blue-600 font-bold'
+                            : msg.role === 'user'
+                              ? 'hover:bg-white/10 text-white/80'
+                              : 'hover:bg-gray-100 text-gray-500'
+                        }`}
+                        title={speechState.currentId === msg.id && speechState.isPlaying ? '読み上げ一時停止' : 'メッセージを読み上げ'}
+                      >
+                        <i className={`fa-solid ${
+                          speechState.currentId === msg.id && speechState.isPlaying ? 'fa-pause' : 'fa-volume-high'
+                        } text-[10px]`}></i>
+                        <span>
+                          {speechState.currentId === msg.id && speechState.isPlaying
+                            ? '再生中...'
+                            : speechState.currentId === msg.id && speechState.isPaused
+                              ? '一時停止'
+                              : '読み上げ'}
+                        </span>
+                      </button>
+
+                      <span>
+                        {msg.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
                   </div>
                 </div>

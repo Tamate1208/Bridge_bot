@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "postbuild": "touch dist/.nojekyll",
+    "postbuild": "node -e \"require('fs').writeFileSync('dist/.nojekyll', '')\"",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
     "start": "node server.ts"

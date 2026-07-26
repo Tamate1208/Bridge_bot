@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FileItem, PersonalityType } from '../types';
+import { speechService, SpeechState } from '../services/speechService';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,9 +28,26 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPersonalityOpen, setIsPersonalityOpen] = useState(true);
+  const [speechState, setSpeechState] = useState<SpeechState>({
+    isPlaying: false,
+    isPaused: false,
+    currentId: null,
+    currentTitle: null,
+    rate: 1.0,
+    pitch: 1.0,
+    voice: null,
+  });
+
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const unsubscribe = speechService.subscribe((state) => {
+      setSpeechState(state);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,6 +58,30 @@ const Sidebar: React.FC<SidebarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const getFileTextContent = (file: FileItem): string => {
+    if (!file.data) return file.name;
+    try {
+      if (file.data.startsWith('data:')) {
+        const base64Parts = file.data.split(',');
+        if (base64Parts.length > 1) {
+          const base64Content = base64Parts[1];
+          const binaryString = atob(base64Content);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const decoded = new TextDecoder('utf-8').decode(bytes);
+          if (decoded && decoded.trim().length > 0) {
+            return decoded;
+          }
+        }
+      }
+      return file.name;
+    } catch (e) {
+      return file.name;
+    }
+  };
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -173,37 +215,67 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {files.map(file => (
-              <div key={file.id} className="group bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5 transition-all relative">
-                <div className="flex items-start gap-3">
-                  <div className="text-xl mt-0.5">
-                    {getIcon(file.type)}
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-xs font-bold text-gray-700 truncate pr-6" title={file.name}>
-                      {file.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-[9px] text-gray-400 font-bold">
-                        {formatSize(file.size)}
+            {files.map(file => {
+              const isCurrentPlaying = speechState.currentId === file.id;
+              return (
+                <div key={file.id} className={`group bg-white rounded-xl p-3 border transition-all relative ${
+                  isCurrentPlaying 
+                    ? 'border-blue-500 shadow-md shadow-blue-500/10 bg-blue-50/30 ring-1 ring-blue-400' 
+                    : 'border-gray-100 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5'
+                }`}>
+                  <div className="flex items-start gap-3 pr-12">
+                    <div className="text-xl mt-0.5">
+                      {getIcon(file.type)}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-xs font-bold text-gray-700 truncate" title={file.name}>
+                        {file.name}
                       </p>
-                      {file.path && (
-                        <span className="text-[9px] text-gray-300 truncate max-w-[100px]">
-                          in {file.path.split('/')[0]}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[9px] text-gray-400 font-bold">
+                          {formatSize(file.size)}
+                        </p>
+                        {file.path && (
+                          <span className="text-[9px] text-gray-300 truncate max-w-[100px]">
+                            in {file.path.split('/')[0]}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {/* アクションボタン群 */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    {/* 音声読み上げボタン */}
+                    <button
+                      onClick={() => {
+                        const content = getFileTextContent(file);
+                        speechService.speak(file.id, `資料: ${file.name}`, content);
+                      }}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        isCurrentPlaying
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'opacity-70 group-hover:opacity-100 hover:bg-blue-50 text-gray-400 hover:text-blue-600'
+                      }`}
+                      title={isCurrentPlaying && speechState.isPlaying ? '読み上げ一時停止' : '資料を読み上げ'}
+                    >
+                      <i className={`fa-solid ${
+                        isCurrentPlaying && speechState.isPlaying ? 'fa-pause text-[10px]' : 'fa-volume-high text-[10px]'
+                      }`}></i>
+                    </button>
+
+                    {/* 削除ボタン */}
+                    <button 
+                      onClick={() => onRemove(file.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 hover:text-red-600 text-gray-300 rounded-lg transition-all"
+                      title="削除"
+                    >
+                      <i className="fa-solid fa-xmark text-[10px]"></i>
+                    </button>
+                  </div>
                 </div>
-                <button 
-                  onClick={() => onRemove(file.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 hover:text-red-600 text-gray-300 rounded-lg transition-all"
-                  title="削除"
-                >
-                  <i className="fa-solid fa-xmark text-[10px]"></i>
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

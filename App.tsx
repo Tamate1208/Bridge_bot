@@ -3,6 +3,7 @@ import { FileItem, ChatMessage, AppState, PersonalityType } from './types';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import Header from './components/Header';
+import AudioController from './components/AudioController';
 import { askGeminiStream } from './services/geminiService';
 import Login from './components/Login';
 
@@ -297,6 +298,9 @@ const App: React.FC = () => {
           />
         </main>
       </div>
+
+      {/* 音声読み上げプレイヤーコントローラー */}
+      <AudioController />
     </div>
   );
 };
